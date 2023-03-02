@@ -1,0 +1,31 @@
+# Proprietes de l'application
+spring:
+  application:
+    name: bank-monolith
+  data:
+    # ACCES Mongo pour clients
+    mongodb:
+      host: localhost  # URL mongodb
+      port: 27017
+      database: banque-spring
+      username: root
+      password: root
+      authentication-database: admin
+    # ACCES MySQL pour comptes
+  datasource:
+    url: jdbc:mysql://localhost:3306/banque-spring   # URL mysql
+    username: root
+    password: root
+  jpa:                                                      # Configuration JPA
+    database-platform: org.hibernate.dialect.MySQL5Dialect  # On va parler en MySQL
+    hibernate:
+      # NE PAS LAISSER EN PROD
+      ddl-auto: update                                      # strategie create-drop.
+# Configuration du log.
+logging:
+  level:
+    org.springframework.web: INFO # Choix du niveau de log affiché
+
+# Proprietes du serveur d'entreprise
+server:
+  port: 10002   # HTTP (Tomcat) port
