@@ -24,6 +24,11 @@ public class ClientsCompteImpl implements ClientsCompte {
     @Autowired
     CompteRepository compterepository;
 
+    public ClientsCompteImpl(ClientRepository clientrepository, CompteRepository compterepository) {
+        this.clientrepository = clientrepository;
+        this.compterepository = compterepository;
+    }
+
     @Override
     public ClientWithCompte getClientWithComptes(Long idclient) {
         logger.info("On a 1 demande");

@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 /**
  * Service d'exposition REST des clients.
  * URL / exposée.
@@ -20,13 +22,19 @@ public class ClientController {
     @Autowired
     private ClientRepository repository;
 
+    public ClientController(ClientRepository repository) {
+        this.repository = repository;
+    }
+
     /**
      * GET 1 client
      * @param client id du client
      * @return Client converti en JSON
      */
     @GetMapping("{id}")
-    public Client getClient(@PathVariable("id") Client client) {
+    public Client getClient(@PathVariable("id") long id) {
+        Optional<Client> optionalClient = repository.findById(id);
+        Client client = optionalClient.get();
         logger.info("Client : demande récup d'un client avec id:{}", client.getId());
         return client;
     }
