@@ -6,6 +6,7 @@ import fr.miage.toulouse.m2.ams.miagebankmonothspring.entities.Compte;
 import fr.miage.toulouse.m2.ams.miagebankmonothspring.export.ClientWithCompte;
 import fr.miage.toulouse.m2.ams.miagebankmonothspring.repo.ClientRepository;
 import fr.miage.toulouse.m2.ams.miagebankmonothspring.repo.CompteRepository;
+import fr.miage.toulouse.m2.ams.miagebankmonothspring.utilities.ClientInexistant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,18 +39,22 @@ public class ClientsCompteImpl implements ClientsCompte {
         Optional<Client> c = this.clientrepository.findById(idclient);
         logger.info("On a recue la réponse client : {}", c);
 
-        // On récupère la liste des comptes pour 1 client donné
-        logger.info("On envoie la demande au service compte");
-        List<Compte> cpts = this.compterepository.findAllByIdclient(idclient);
-        logger.info("On a recue la réponse compte : {}", c);
+        if(c.isPresent()) {
+            // On récupère la liste des comptes pour 1 client donné
+            logger.info("On envoie la demande au service compte");
+            List<Compte> cpts = this.compterepository.findAllByIdclient(idclient);
+            logger.info("On a recue la réponse compte : {}", cpts);
 
-        // On forge la réponse
-        ClientWithCompte cwc = new ClientWithCompte();
-        cwc.setId(c.get().getId());
-        cwc.setNom(c.get().getNom());
-        cwc.setPrenom(c.get().getPrenom());
-        cwc.setComptes(cpts);
-        return cwc;
+            // On forge la réponse
+            ClientWithCompte cwc = new ClientWithCompte();
+            cwc.setId(c.get().getId());
+            cwc.setNom(c.get().getNom());
+            cwc.setPrenom(c.get().getPrenom());
+            cwc.setComptes(cpts);
+            return cwc;
+        } else {
+            throw new ClientInexistant("Le client d'id "+idclient+ " n'existe pas");
+        }
     }
 
 }

@@ -15,7 +15,7 @@ import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -50,10 +50,6 @@ class ClientControllerTest {
         client.setId(0L);
         client.setPrenom("Jean");
         client.setNom("Dupond");
-        given(clientRepository.findById(0L)).willReturn(Optional.of(client));
-        List<Client> clientList = Arrays.asList(client);
-        given(clientRepository.findAll()).willReturn(clientList);
-        given(clientRepository.save(any())).willReturn(client);
     }
 
     /**
@@ -62,11 +58,17 @@ class ClientControllerTest {
      */
     @Test
     void getClient() throws Exception {
+        given(clientRepository.findById(0L)).willReturn(Optional.of(client));
+        given(clientRepository.findById(1L)).willReturn(Optional.empty());
         // On appelle la méthode GET
         mvc.perform(get("/api/clients/0")
                         .contentType("application/json;charset=UTF-8")) // précise le content-type
                 .andExpect(status().isOk()) // vérifie que tout s'est bien passé
                 .andExpect(jsonPath("$.nom", is(client.getNom()))); // vérifie qu'il y a bien des infos
+        // On appelle la méthode GET
+        mvc.perform(get("/api/clients/1")
+                        .contentType("application/json;charset=UTF-8")) // précise le content-type
+                .andExpect(status().isNotFound()); // vérifie qu'on a une erreur 404
 
     }
 
@@ -76,6 +78,8 @@ class ClientControllerTest {
      */
     @Test
     void getClients() throws Exception {
+        List<Client> clientList = Arrays.asList(client);
+        given(clientRepository.findAll()).willReturn(clientList);
         // On appelle la méthode GET
         mvc.perform(get("/api/clients")
                         .contentType("application/json;charset=UTF-8")) // précise le content-type
@@ -86,10 +90,12 @@ class ClientControllerTest {
 
     /**
      * Test du post
-     * @throws Exception
+     * @throws Exception en cas de problème
      */
     @Test
     void postClient() throws Exception {
+        given(clientRepository.findById(0L)).willReturn(Optional.empty()).willReturn(Optional.of(client));
+        given(clientRepository.save(any())).willReturn(client);
         // On appelle la méthode POST
         mvc.perform(post("/api/clients")
                         .contentType("application/json;charset=UTF-8") // précise le content-type
@@ -97,5 +103,10 @@ class ClientControllerTest {
                 .andExpect(status().isOk()) // vérifie que tout s'est bien passé
                 .andExpect(jsonPath("$.id", is(0))); // vérifie qu'il y a bien des infos
 
+        // On appelle la méthode POST à nouveau
+        mvc.perform(post("/api/clients")
+                        .contentType("application/json;charset=UTF-8") // précise le content-type
+                        .content("{\"id\" : 0, \"nom\" : \"Test\", \"prenom\":\"Jean\"}")) // précise le contenu envoyé
+                .andExpect(status().is4xxClientError()); // vérifie qu'on reçoit une erreur
     }
 }

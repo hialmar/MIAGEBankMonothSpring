@@ -2,6 +2,8 @@ package fr.miage.toulouse.m2.ams.miagebankmonothspring.exposition;
 
 import fr.miage.toulouse.m2.ams.miagebankmonothspring.entities.Compte;
 import fr.miage.toulouse.m2.ams.miagebankmonothspring.repo.CompteRepository;
+import fr.miage.toulouse.m2.ams.miagebankmonothspring.utilities.CompteDejaPresent;
+import fr.miage.toulouse.m2.ams.miagebankmonothspring.utilities.CompteInconnuException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +26,21 @@ public class CompteController {
 
     /**
      * GET 1 compte
-     * @param compte id du compte
+     * @param id id du compte
      * @return Compte converti en JSON
      */
     @GetMapping("{id}")
-    public Compte getCompte(@PathVariable("id") Compte compte) {
-        logger.info("Compte : demande d'un compte avec id:{}", compte.getId());
-        return compte;
+    public Compte getCompte(@PathVariable("id") long id) {
+        Optional<Compte> optionalCompte = repo.findById(id);
+        if (optionalCompte.isPresent()) {
+            Compte compte = optionalCompte.get();
+            logger.info("Compte : demande d'un compte avec id:{}", compte.getId());
+            return compte;
+        } else {
+            logger.info("Compte : compte inexistant avec l'id: {}", id);
+            throw new CompteInconnuException("Le compte d'id "+id+" n'existe pas");
+        }
+
     }
 
     /**
@@ -38,12 +48,9 @@ public class CompteController {
      * @return liste des comptes en JSON. [] si aucun compte.
      */
     @GetMapping("")
-    public Iterable<Compte> getComptes(@RequestParam("client") String id) {
-        long idl = Long.parseLong(id);
+    public Iterable<Compte> getComptes(@RequestParam("client") long id) {
         logger.info("Compte : demande des comptes d'un client avec id:{}", id);
-        Iterable<Compte> liste = repo.findAllByIdclient(idl);
-        logger.info("Compte : demande des comptes d'un client avec id:{}", id);
-        return liste;
+        return repo.findAllByIdclient(id);
     }
     
     /**
@@ -63,7 +70,11 @@ public class CompteController {
      */
     @PostMapping("")
     public Compte postClient(@RequestBody Compte cpt) {
-        logger.info("Compte : demande CREATION d'un compte avec id:{}", cpt.getId());
+        if (repo.existsById(cpt.getId())) {
+            logger.info("Compte : erreur compte déjà présent avec l'id : {}", cpt.getId());
+            throw new CompteDejaPresent("Un compte existe déjà avec l'id "+cpt.getId());
+        }
+        logger.info("Compte : demande CREATION d'un compte avec id : {}", cpt.getId());
         return repo.save(cpt);
     }
 

@@ -5,8 +5,10 @@ import fr.miage.toulouse.m2.ams.miagebankmonothspring.entities.Compte;
 import fr.miage.toulouse.m2.ams.miagebankmonothspring.export.ClientWithCompte;
 import fr.miage.toulouse.m2.ams.miagebankmonothspring.repo.ClientRepository;
 import fr.miage.toulouse.m2.ams.miagebankmonothspring.repo.CompteRepository;
+import fr.miage.toulouse.m2.ams.miagebankmonothspring.utilities.ClientInexistant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -74,5 +76,13 @@ class ClientsCompteTest {
         assertEquals(compte.getIdclient(), 0L);
         assertEquals(compte.getSolde(), 1000, 0.1);
         assertEquals(compte.getId(), 0);
+        // on vérifie que ça jette une exception si on demande un client inexistant
+        assertThrows(ClientInexistant.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                // on appelle la méthode
+                ClientWithCompte clientWithCompte = clientsCompte.getClientWithComptes(1L);
+            }
+        });
     }
 }

@@ -2,6 +2,8 @@ package fr.miage.toulouse.m2.ams.miagebankmonothspring.exposition;
 
 import fr.miage.toulouse.m2.ams.miagebankmonothspring.entities.Client;
 import fr.miage.toulouse.m2.ams.miagebankmonothspring.repo.ClientRepository;
+import fr.miage.toulouse.m2.ams.miagebankmonothspring.utilities.ClientDejaPresent;
+import fr.miage.toulouse.m2.ams.miagebankmonothspring.utilities.ClientInexistant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,15 +30,20 @@ public class ClientController {
 
     /**
      * GET 1 client
-     * @param client id du client
+     * @param id id du client
      * @return Client converti en JSON
      */
     @GetMapping("{id}")
     public Client getClient(@PathVariable("id") long id) {
         Optional<Client> optionalClient = repository.findById(id);
-        Client client = optionalClient.get();
-        logger.info("Client : demande récup d'un client avec id:{}", client.getId());
-        return client;
+        if(optionalClient.isPresent()) {
+            Client client = optionalClient.get();
+            logger.info("Client : demande récup d'un client avec id:{}", client.getId());
+            return client;
+        } else {
+            logger.info("Client : non trouvé avec l'id:{}", id);
+            throw new ClientInexistant("Le client d'id "+id+" n'existe pas");
+        }
     }
 
     /**
@@ -56,6 +63,11 @@ public class ClientController {
      */
     @PostMapping("")
     public Client postClient(@RequestBody Client client) {
+        Optional<Client> optionalClient = repository.findById(client.getId());
+        if(optionalClient.isPresent()) {
+            logger.info("Client : erreur compte déjà exitant avec id :{}", client.getId());
+            throw new ClientDejaPresent("Le client d'id "+client.getId()+" existe déjà");
+        }
         logger.info("Client : demande CREATION d'un client avec id:{}", client.getId());
         return repository.save(client);
     }
